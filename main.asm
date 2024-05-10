@@ -2,9 +2,15 @@
 ;        however, it works on static coordinates
 ; TODO: fix rng  
 
+; ISSUE: food collision does not work on randomly generated food_pos, possibly due to overflow
+;        however, it works on static coordinates
+; TODO: fix rng  
+
 .model small
 .stack 100h
+.stack 100h
 .data
+    snake_pos dw 960 dup (?) ; higher byte = x coord | lower byte = y coord    ; dosbox screen is 27hx18h adjusted for 8x8 sprites  
     snake_pos dw 960 dup (?) ; higher byte = x coord | lower byte = y coord    ; dosbox screen is 27hx18h adjusted for 8x8 sprites  
     snake_length dw 0
     key_pressed db 'd'
@@ -26,9 +32,52 @@
     strScore db 'Score:'
     strScore_s equ $-strScore
   
+    strScore_s equ $-strScore
+  
 .code
     mov ax, @data
     mov ds, ax 
+    mov ax, 0001h
+    lea di, border_pos
+
+    gen_border_top:
+        cmp ah, 28h
+        je bottom_border
+        mov word ptr [di], ax 
+        inc ah
+        add di, 2
+        jmp gen_border_top
+    
+    bottom_border:
+        mov ax, 0031h
+    gen_border_bottom:
+        cmp ah, 28h
+        je left_border 
+        mov word ptr [di], ax 
+        inc ah 
+        add di, 2
+        jmp gen_border_bottom
+
+    left_border:
+        mov ax, 0002h
+    gen_border_left:
+        cmp al, 18h
+        je right_border
+        mov word ptr [di], ax 
+        inc al 
+        add di, 2
+        jmp gen_border_left
+    
+    right_border:
+        mov ax, 2702h
+    gen_border_right:
+        cmp al, 18h
+        je main
+        mov word ptr [di], ax 
+        inc al 
+        add di, 2
+        jmp gen_border_right
+    
     mov ax, 0001h
     lea di, border_pos
 
@@ -82,7 +131,14 @@
     ;    mov word ptr [si+4], 080Ah ;;   
 
         ;call random
+        lea si, snake_pos ;;
+        mov word ptr [si], 0A0Ah ;;   
+    ;    mov word ptr [si+2], 090Ah ;;   
+    ;    mov word ptr [si+4], 080Ah ;;   
+
+        ;call random
         game_loop:
+            call write_score
             call write_score
             call input
             call draw
@@ -103,7 +159,22 @@
         int 10h
         ret
 
+            ; should never reach this
+            mov ah, 4ch
+            int 21h
+
+    cls: ; clears the screen
+        mov ah, 07h          ; scroll down function
+        mov al, 0            ; number of lines to scroll
+        mov cx, 0
+        mov dx, 9090
+        mov bh, 00h          ; clear entire screen
+        int 10h
+        ret
+
     write_score:
+        mov ax, @data
+        mov es, ax 
         mov ax, @data
         mov es, ax 
         mov ax, 1300h ; interrupt for write string
@@ -146,16 +217,21 @@
             jle print        
         ret
 
+        ret
+
     input:
         mov ah, 01h ; get user input
         int 16h
+
 
         jz back
 
         mov ah, 00h
         int 16h
         
+        
         cmp al, 27 ; check if escape key
+        jne update ; update key_pressed if not esc
         jne update ; update key_pressed if not esc
         mov ah, 4ch
         int 21h
@@ -163,6 +239,7 @@
         update:
             mov ah, key_pressed
             mov prev_key, ah
+            mov key_pressed, al           
             mov key_pressed, al           
     back: ret 
 
@@ -490,6 +567,7 @@
             lea si, snake_pos
         check_key:
             mov dx, word ptr [si]
+            mov dx, word ptr [si]
             cmp key_pressed, 'w'
             je move_up 
             cmp key_pressed, 'a' 
@@ -507,9 +585,18 @@
             dec dl 
             mov word ptr [si], dx
             jmp collision
+            cmp dl, 2   ; check if at the topmost side of the screen
+            jz stop
+            dec dl 
+            mov word ptr [si], dx
+            jmp collision
         move_down: 
             cmp prev_key, 'w'
             je ignore
+            cmp dl, 22   ; check if at the bottommost side of the screen
+            jz stop
+            inc dl 
+            mov word ptr [si], dx
             cmp dl, 22   ; check if at the bottommost side of the screen
             jz stop
             inc dl 
@@ -522,10 +609,18 @@
             jz stop
             dec dh 
             mov word ptr [si], dx
+            cmp dh, 1   ; check if at the leftmost side of the screen
+            jz stop
+            dec dh 
+            mov word ptr [si], dx
             jmp collision 
         move_right: 
             cmp prev_key, 'a'
             je ignore
+            cmp dh, 38  ; check if at the rightmost side of the screen
+            jz stop
+            inc dh
+            mov word ptr [si], dx
             cmp dh, 38  ; check if at the rightmost side of the screen
             jz stop
             inc dh
