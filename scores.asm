@@ -1,10 +1,11 @@
 .model small
 .stack 100h
 .data
-    filename db 'progs\snek\data.txt', 0
+    filename db 'progs\snek\snekscor.txt', 0
     handle dw ?
     scores db 00h, 6*6 dup (0)
     strbuf db 4 dup(?)
+    teststr db '12345678', 13, 10
     screbuf db 00h
 .code 
     mov ax, @data
@@ -42,9 +43,11 @@
             dec cl
             jnz ldbuf
         lea dx, ldbuf
-        mov ah, 09h
+
+        mov ah, 09h ; prints the strbuf
         int 21h
-        mov ah, 02h
+        
+        mov ah, 02h ; prints space
         mov dl, 20h
         int 21h
         
@@ -63,15 +66,13 @@
         printnum:
             pop dx
             add dx, '0'
-            mov ah, 02 
+            mov ah, 02 ; prints score
             int 21h
         loop printnum
         inc si
         pop cx
         dec ch
     jnz iter_scores
-
-
 
     ;close file
     mov ah, 3eh

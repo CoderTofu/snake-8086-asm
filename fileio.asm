@@ -21,11 +21,11 @@
     mov ax, @data
     mov ds, ax
     ; ;create file
-    ; mov ah, 3ch
-    ; mov cx, 0h  
-    ; lea dx, filename
-    ; int 21h
-    ;open file  
+    mov ah, 3ch
+    mov cx, 0h  
+    lea dx, filename
+    int 21h
+    ; open file  
     mov ax, 3d02h
     lea dx, filename
     int 21h
