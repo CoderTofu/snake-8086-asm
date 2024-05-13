@@ -16,7 +16,8 @@
 </ul>
 <ul>
   <h2>TODOs/bugs</h2>
-  <li>flickering graphics on lower cpu cycles which becomes more noticeable as snake gets longer </li>
-  <li>food collision does not work on randomly generated food_pos, possibly due to overflow; only works on static coordinates</li>
-  <li>fix food coordinate rng</li> 
+  <li>Read and display strbuf</li>
+  <li>Create and set lead_ctr to count what row will strbuf be printed for each iteration</li>
+  <li>Let saving be an option not an instant function every game</li>
+  <li>Using score_page, let user input username before saving to snekscor.txt</li>
 </ul>
