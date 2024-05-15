@@ -459,24 +459,6 @@ resp PROC
     ret
 resp ENDP
 
-lead_out PROC
-    
-    mov dh, 8 ;row
-    mov dl, 14 ;coloumn
-    mov bl, 0Eh ;color
-    mov cx, strMechMsg_l
-    lea bp, strMechMsg
-    call str_out
-
-    mov dh, 9 ;row
-    mov dl, 14 ;coloumn
-    mov bl, 0Eh ;color
-    mov cx, strMechMsg_l
-    lea bp, strMechMsg
-    call str_out
-
-lead_out ENDP
-
 InvalidMsg PROC
     call cls
     mov dh, 13 ;row
